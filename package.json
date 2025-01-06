@@ -1,0 +1,24 @@
+{
+  "name": "learning-backend",
+  "version": "1.0.0",
+  "description": "Building the backend of a video streaming app.",
+  "keywords": [
+    "javascript",
+    "backend"
+  ],
+  "homepage": "https://github.com/blue0206/learning-backend#readme",
+  "bugs": {
+    "url": "https://github.com/blue0206/learning-backend/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/blue0206/learning-backend.git"
+  },
+  "license": "ISC",
+  "author": "Aayush Rai",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  }
+}
