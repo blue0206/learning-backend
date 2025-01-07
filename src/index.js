@@ -5,7 +5,21 @@ dotenv.config({
     path: "./.env"
 });
 
-connectDB();
+connectDB()
+.then(() => {
+    app.on("error", (error) => {
+        console.log("Error: ", error);
+        throw error;
+    });
+    const port = process.env.PORT || 4000;
+    app.listen(port, () => {
+// Establishes a connection to a MongoDB database using 'dotenv' for environment variables and handles potential errors during connection and server startup.
+        console.log(`Application listening on Port: ${port}`);
+    });
+})
+.catch((error) => {
+    console.log("MongoDB connection failed! ", error);
+})
 
 // import mongoose from "mongoose";
 // import { DB_NAME } from "./constants";
