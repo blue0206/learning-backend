@@ -7,6 +7,13 @@ cloudinary.config({
     api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
+const extractPublicId = (url) => {
+    const parts = url.split("/");
+    const targetPart = parts[parts.length-1];
+    const publicId = targetPart.split('.')[0];
+    return publicId;
+};
+
 const uploadOnCloudinary = async (localFilePath) => {
     try {
         if (!localFilePath) return null;
@@ -22,6 +29,16 @@ const uploadOnCloudinary = async (localFilePath) => {
         fs.unlinkSync(localFilePath);
         return null;
     }
-}
+};
 
-export { uploadOnCloudinary };
+const deleteFromCloudinary = async (imageUrl) => {
+    try {
+        if (!imageUrl) return null;
+        const publicId = extractPublicId(imageUrl);
+        await cloudinary.uploader.destroy(publicId, (result) => console.log(result));
+    } catch (error) {
+        console.log("Error deleting image from cloudinary: ", error);
+    }
+};
+
+export { uploadOnCloudinary, deleteFromCloudinary };
