@@ -370,6 +370,47 @@ const updateUserAvatar = asyncHandler(async (req, res) => {
     );
 });
 
+const updateUserCoverImage = asyncHandler(async (req, res) => {
+    // Same as updateUserAvatar.
+    const coverImageLocalPath = req.file?.path || "";
+    // Check if cover image uploaded by user.
+    if (!coverImageLocalPath) {
+        throw new ApiError(400, "Cover image is required.");
+    }
+    // Upload cover image on cloudinary.
+    const uploadedCoverImage = await uploadOnCloudinary(coverImageLocalPath);
+    // Check if cover image uploaded succesfully on cloudinary.
+    if (!uploadedCoverImage) {
+        throw new ApiError(400, "Error uploading cover image.");
+    }
+    // Find user in DB and update.
+    const user = await User.findByIdAndUpdate(
+        req.user?._id,
+        {
+            $set: {
+                coverImage: uploadedCoverImage.url
+            }
+        },
+        {
+            new: true
+        }
+    );
+    // Check if user updated successfully.
+    if (!user) {
+        throw new ApiError(500, "Error updating the cover image.");
+    }
+    // Return response.
+    res
+    .status(200)
+    .json(
+        new ApiResponse(
+            200,
+            user,
+            "User cover image updated successfully."
+        )
+    );
+});
+
 export { 
     resgisterUser, 
     loginUser, 
@@ -378,5 +419,6 @@ export {
     changeCurrentPassword,
     getCurrentUser,
     updateAccountDetails,
-    updateUserAvatar
+    updateUserAvatar,
+    updateUserCoverImage
 };
