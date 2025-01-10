@@ -247,7 +247,7 @@ const changeCurrentPassword = asyncHandler(async (req, res) => {
     const user = await User.findById(req.user?._id);
     // Check if user fetched correctly.
     if (!user) {
-        throw new ApiError(500, "The username or email is incorrect.");
+        throw new ApiError(500, "Error fetching user from server.");
     }
     // Check if password provided by user is correct.
     const validatePassword = await user.isPasswordCorrect(oldPassword);
@@ -269,4 +269,23 @@ const changeCurrentPassword = asyncHandler(async (req, res) => {
     );
 });
 
-export { resgisterUser, loginUser, logoutUser, refreshAccessToken, changeCurrentPassword };
+const getCurrentUser = asyncHandler(async (req, res) => {
+    return res
+    .status(200)
+    .json(
+        new ApiResponse(
+            200,
+            req.user,
+            "User fetched successfully."
+        )
+    );
+});
+
+export { 
+    resgisterUser, 
+    loginUser, 
+    logoutUser, 
+    refreshAccessToken, 
+    changeCurrentPassword,
+    getCurrentUser
+};
