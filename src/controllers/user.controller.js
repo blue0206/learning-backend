@@ -3,8 +3,23 @@ import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { User } from "../models/user.model.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
+import jwt from "jsonwebtoken";
 
-const resgisterUser = asyncHandler( async (req, res) => {
+const generateAccessAndRefreshTokens = async (userId) => {
+    try {
+        const user = await User.findById(userId);
+        const accessToken = user.generateAccessToken();
+        const refreshToken = user.generateRefreshToken();
+        // Update user refresh token entry.
+        user.refreshToken = refreshToken;
+        await user.save({ validateBeforeSave: false });
+        return { accessToken, refreshToken };
+    } catch (error) {
+        throw new ApiError(500, "Something went wrong while generating access and refresh tokens.");
+    }
+}
+
+const resgisterUser = asyncHandler(async (req, res) => {
     // STEPS:
     // Get details.
     // Validate data.
@@ -78,4 +93,85 @@ const resgisterUser = asyncHandler( async (req, res) => {
     return res.status(201).json(new ApiResponse(201, createdUser, "User registered successfully!"));
 });
 
-export { resgisterUser };
+const loginUser = asyncHandler(async (req, res) => {
+    // STEPS:
+    // Get data.
+    // Check username or email.
+    // Check password.
+    // Access and refresh token.
+    // Send cookies.
+    // Login.
+
+    const {username, email, password} = req.body;
+    // Check if either username or email provided.
+    if (!(username || email)) {
+        throw new ApiError(404, "Username or Email is required.");
+    }
+    // Check if the user exists.
+    const userExists = await User.findOne({
+        $or: [{email}, {username}]
+    });
+    if (!userExists) {
+        throw new ApiError(405, "The user does not exist.");
+    }
+    // Check if the password is correct.
+    const passwordCorrect = await userExists.isPasswordCorrect(password);
+    if (!passwordCorrect) {
+        throw new ApiError(408, "The password is incorrect.");
+    }
+    // Generate access and refresh tokens.
+    const {accessToken, refreshToken} = await generateAccessAndRefreshTokens(userExists._id);
+    const loggedInUser = await User.findById(userExists._id).select("-password -refreshToken");
+
+    const options = {
+        httpOnly: true,
+        secure: true
+    };
+
+    return res
+    .status(200)
+    .cookie("accessToken", accessToken, options)
+    .cookie("refreshToken", refreshToken, options)
+    .json(new ApiResponse(
+        200,
+        {
+            user: loggedInUser, accessToken, refreshToken
+        },
+        "User logged in successfully."
+    ));
+});
+
+const logoutUser = asyncHandler(async (req, res) => {
+    // STEPS:
+    // Remove refresh tokens.
+    // Clear cookies.
+    await User.findByIdAndUpdate(
+        req.user._id,
+        {
+            $set: {
+                refreshToken: undefined
+            }
+        }, {
+            new: true
+        }
+    )
+
+    const options = {
+        httpOnly: true,
+        secure: true
+    };
+
+    return res
+    .status(200)
+    .clearCookie("accessToken", options)
+    .clearCookie("refreshToken", options)
+    .json(
+        new ApiResponse(
+            200,
+            {},
+            "User logged out successfully."
+        )
+    );
+});
+
+export { resgisterUser, loginUser, logoutUser };
