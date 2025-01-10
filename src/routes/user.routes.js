@@ -18,12 +18,10 @@ router.route("/register").post(
     ]),
     resgisterUser
 );
-
 router.route("/login").post(loginUser);
 
 // Secured routes.
 router.route("/logout").post(verifyJWT, logoutUser);
-
 router.route("/refresh-token").post(refreshAccessToken);
 
 export default router;
