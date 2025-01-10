@@ -235,4 +235,38 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
     
 });
 
-export { resgisterUser, loginUser, logoutUser, refreshAccessToken };
+const changeCurrentPassword = asyncHandler(async (req, res) => {
+    // STEPS:
+    // Get old and new password.
+    // Get user from DB using id.
+    // Check if user fetched.
+    // Check if password is correct.
+    // Change password.
+    // Update DB.
+    const {oldPassword, newPassword} = req.body;
+    const user = await User.findById(req.user?._id);
+    // Check if user fetched correctly.
+    if (!user) {
+        throw new ApiError(500, "The username or email is incorrect.");
+    }
+    // Check if password provided by user is correct.
+    const validatePassword = await user.isPasswordCorrect(oldPassword);
+    if (!validatePassword) {
+        throw new ApiError(400, "The password is incorrect.");
+    }
+    // Update password and save.
+    user.password = newPassword;
+    await user.save({validateBeforeSave: false});
+
+    return res
+    .status(200)
+    .json(
+        new ApiResponse(
+            200,
+            {},
+            "Use password changed successfully."
+        )
+    );
+});
+
+export { resgisterUser, loginUser, logoutUser, refreshAccessToken, changeCurrentPassword };
