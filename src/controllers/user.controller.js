@@ -270,6 +270,8 @@ const changeCurrentPassword = asyncHandler(async (req, res) => {
 });
 
 const getCurrentUser = asyncHandler(async (req, res) => {
+    // The auth middleware performs all the necessary checks and provides
+    // user as a part of req object. We just return it.
     return res
     .status(200)
     .json(
@@ -281,11 +283,53 @@ const getCurrentUser = asyncHandler(async (req, res) => {
     );
 });
 
+const updateAccountDetails = asyncHandler(async (req, res) => {
+    // STEPS:
+    // Get fields to be updated.
+    // Fetch user from DB by getting details from req.
+    // Update details and save.
+    // Check if updated successfully.
+
+    const {newFullname, newEmail} = req.body;
+    // Check if at least one field is provided.
+    if (!(newFullname || newEmail)) {
+        throw new ApiError(400, "Fullname or Email is required.");
+    }
+    // Fetch user from DB and update details.
+    const user = await User.findByIdAndUpdate(
+        req.user?._id,
+        {
+            $set: {
+                fullname: newFullname || fullname,
+                email: newEmail || email
+            },
+        },
+        {
+            new: true
+        }
+    ).select("-password -refreshToken");
+    // Check if updated successfully.
+    if (!user) {
+        throw new ApiError(500, "Error updating user details.");
+    }
+    // Return response.
+    return res
+    .status(200)
+    .json(
+        new ApiResponse(
+            200,
+            user,
+            "User account details updated successfully."
+        )
+    );
+});
+
 export { 
     resgisterUser, 
     loginUser, 
     logoutUser, 
     refreshAccessToken, 
     changeCurrentPassword,
-    getCurrentUser
+    getCurrentUser,
+    updateAccountDetails
 };
