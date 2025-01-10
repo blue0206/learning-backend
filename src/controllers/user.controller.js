@@ -324,6 +324,52 @@ const updateAccountDetails = asyncHandler(async (req, res) => {
     );
 });
 
+const updateUserAvatar = asyncHandler(async (req, res) => {
+    // Check if avatar uploaded locally successfully.
+    // Upload avatar on cloudinary.
+    // Check if uploaded on cloudinary.
+    // Fetch and update user in DB.
+    // Check if updated successfully.
+
+    const avatarLocalPath = req.file?.path || "";
+    // Check if user has uploaded avatar.
+    if (!avatarLocalPath) {
+        throw new ApiError(400, "Avatar is required.");
+    }
+    // Upload on cloudinary.
+    const uploadedAvatar = await uploadOnCloudinary(avatarLocalPath);
+    // Check if uploaded on cloudinary.
+    if (!uploadedAvatar) {
+        throw new ApiError(400, "Error while uploading avatar.");
+    }
+    // Find user in DB and update.
+    const user = await User.findByIdAndUpdate(
+        req.user?._id,
+        {
+            $set: {
+                avatar: uploadedAvatar.url
+            }
+        },
+        {
+            new: true
+        }
+    ).select("-password -refreshToken");
+    // Check if user updated successfully.
+    if (!user) {
+        throw new ApiError(500, "Error updating the avatar.");
+    }
+    // Return response.
+    return res
+    .status(200)
+    .json(
+        new ApiResponse(
+            200,
+            user,
+            "User avatar updated successfully."
+        )
+    );
+});
+
 export { 
     resgisterUser, 
     loginUser, 
@@ -331,5 +377,6 @@ export {
     refreshAccessToken, 
     changeCurrentPassword,
     getCurrentUser,
-    updateAccountDetails
+    updateAccountDetails,
+    updateUserAvatar
 };
