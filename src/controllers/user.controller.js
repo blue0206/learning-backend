@@ -2,7 +2,7 @@ import { asyncHandler } from "../utils/async-handler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { User } from "../models/user.model.js";
-import { uploadOnCloudinary } from "../utils/cloudinary.js";
+import { uploadOnCloudinary, deleteFromCloudinary } from "../utils/cloudinary.js";
 import jwt from "jsonwebtoken";
 
 const generateAccessAndRefreshTokens = async (userId) => {
@@ -358,6 +358,8 @@ const updateUserAvatar = asyncHandler(async (req, res) => {
     if (!user) {
         throw new ApiError(500, "Error updating the avatar.");
     }
+    // Remove old avatar from cloudinary.
+    await deleteFromCloudinary(req.user?.avatar);
     // Return response.
     return res
     .status(200)
@@ -399,6 +401,8 @@ const updateUserCoverImage = asyncHandler(async (req, res) => {
     if (!user) {
         throw new ApiError(500, "Error updating the cover image.");
     }
+    // Remove old cover image from cloudinary.
+    await deleteFromCloudinary(req.user?.coverImage);
     // Return response.
     res
     .status(200)
