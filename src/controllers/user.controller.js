@@ -533,8 +533,19 @@ const getWatchHistory = asyncHandler(async (req, res) => {
                     }
                 ]
             }
+        },
+        {
+            $project: {
+                username: 1,
+                email: 1,
+                fullname: 1,
+                avatar: 1,
+                coverImage: 1,
+                watchHistory: 1
+            }
         }
     ]);
+    console.log("USER HISTORY:\n", user);
     return res
     .status(200)
     .json(
